@@ -1,0 +1,31 @@
+<assembly>
+    <id>dist</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>dir</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>target/appassembler/bin</directory>
+            <outputDirectory>/bin</outputDirectory>
+            <excludes>
+                <exclude>*.bat</exclude>
+                <exclude>*.cmd</exclude>
+            </excludes>
+            <lineEnding>unix</lineEnding>
+            <fileMode>0744</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>target/appassembler/lib</directory>
+            <outputDirectory>/lib</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>share</directory>
+            <outputDirectory>/lib</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>/conf</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>
