@@ -31,8 +31,9 @@ package com.xebia.deconfluencer.confluence;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Map;
 import javax.xml.transform.Templates;
-import javax.xml.transform.TransformerFactory;
+import org.apache.xalan.xsltc.trax.TransformerFactoryImpl;
 import org.eclipse.jetty.server.Server;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -51,6 +52,11 @@ public class Deconfluencer {
 
     private final static int DEFAULT_PORTNUMBER = 8082;
     private final static Logger logger = new Logger();
+
+    @Option(name = "-o",
+            usage = "Parameters to be passed to the transformation",
+            required = false)
+    private Map<String, String> params;
 
     @Option(name = "-u",
             metaVar = "USERNAME",
@@ -100,12 +106,12 @@ public class Deconfluencer {
         };
 //        TransformerFactory factory = TransformerFactory.newInstance();
 //        Templates templates = factory.newTemplates(new StreamSource(Resources.getResource("filter.xsl").openStream()));
-        Templates templates = new ReloadingTemplates(filter, TransformerFactory.newInstance());
+        Templates templates = new ReloadingTemplates(filter, new TransformerFactoryImpl());
         Server server = new Server(portNumber);
         Loader<InputStream> dataLoader = new HttpLoader(builder,
                 new BasicAuthenticationRequestExtender(username, password));
         NekoSourceLoader nekoSourceLoader = new NekoSourceLoader(dataLoader);
-        TransformingHandler handler = new TransformingHandler(nekoSourceLoader, new Transformation(templates));
+        TransformingHandler handler = new TransformingHandler(nekoSourceLoader, new Transformation(templates, params));
         server.setHandler(handler);
         server.start();
     }

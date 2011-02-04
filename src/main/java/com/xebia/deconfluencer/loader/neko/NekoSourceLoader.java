@@ -32,7 +32,8 @@ package com.xebia.deconfluencer.loader.neko;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.transform.dom.DOMSource;
-import org.cyberneko.html.parsers.DOMParser;
+import org.apache.xerces.parsers.DOMParser;
+import org.cyberneko.html.HTMLConfiguration;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import com.google.common.io.Closeables;
@@ -65,8 +66,9 @@ public class NekoSourceLoader implements Loader<DOMSource> {
             if (in == null) {
                 return null;
             } else {
-                DOMParser parser = new DOMParser();
+                DOMParser parser = new DOMParser(new HTMLConfiguration());
                 parser.setProperty("http://cyberneko.org/html/properties/names/elems", "lower");
+                parser.setProperty("http://cyberneko.org/html/properties/names/attrs", "lower");
                 parser.parse(new InputSource(in));
                 logger.debug("Returning DOM Document based on HTML.");
                 return new DOMSource(parser.getDocument());

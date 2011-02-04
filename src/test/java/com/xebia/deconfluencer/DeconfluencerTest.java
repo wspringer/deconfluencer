@@ -30,6 +30,7 @@
 package com.xebia.deconfluencer;
 
 import java.io.InputStream;
+import java.util.Collections;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
@@ -67,7 +68,8 @@ public class DeconfluencerTest {
         Loader<InputStream> dataLoader = new HttpLoader(builder,
                 new BasicAuthenticationRequestExtender(username, password));
         NekoSourceLoader nekoSourceLoader = new NekoSourceLoader(dataLoader);
-        TransformingHandler handler = new TransformingHandler(nekoSourceLoader, new Transformation(templates));
+        TransformingHandler handler =
+                new TransformingHandler(nekoSourceLoader, new Transformation(templates, Collections.<String, String>emptyMap()));
         server.setHandler(handler);
         server.start();
         while (true) {

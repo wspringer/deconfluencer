@@ -29,19 +29,23 @@
  */
 package com.xebia.deconfluencer.xslt;
 
+import java.util.Collections;
+import java.util.Map;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 
 /**
- * The definition of an XSLT transormation, encapsulating some of the complexity of the TraX API.
+ * The definition of an XSLT transformation, encapsulating some of the complexity of the TraX API.
  */
 public class Transformation {
 
     private final Templates templates;
+    private Map<String,String> params;
 
     /**
      * Constructs a new instance.
@@ -50,7 +54,7 @@ public class Transformation {
      *                  for threadsafety.)
      */
     public Transformation(Templates templates) {
-        this.templates = templates;
+        this(templates, Collections.<String, String>emptyMap());
     }
 
     /**
@@ -68,12 +72,24 @@ public class Transformation {
         }
     }
 
+    public Transformation(Templates templates, Map<String, String> params) {
+        this.templates = templates;
+        this.params = params;
+    }
+
     /**
      * Transforms the source and writes results to the target.
      */
-    public void transform(Source source, Result target) {
+    public void transform(Source source, Result target, Map<String, String> requestParams) {
         try {
-            templates.newTransformer().transform(source, target);
+            Transformer transformer = templates.newTransformer();
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                transformer.setParameter(entry.getKey(), entry.getValue());
+            }
+            for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+                transformer.setParameter(entry.getKey(), entry.getValue());
+            }
+            transformer.transform(source, target);
         } catch (TransformerException e) {
             throw new TransformationException(e);
         }

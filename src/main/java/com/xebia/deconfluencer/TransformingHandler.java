@@ -30,6 +30,7 @@
 package com.xebia.deconfluencer;
 
 import java.io.IOException;
+import java.util.Collections;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,7 +65,7 @@ public class TransformingHandler extends AbstractHandler {
         String path = baseRequest.getPathInfo();
         Source source = loader.load(path);
         response.setContentType("text/html");
-        template.transform(source, new StreamResult(response.getOutputStream()));
+        template.transform(source, new StreamResult(response.getOutputStream()), Collections.singletonMap("path", path));
     }
 
 }
