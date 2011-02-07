@@ -83,9 +83,9 @@ public class Deconfluencer {
             required= true)
     private File filter;
 
-    @Option(name = "-s",
-            metaVar = "SPACE",
-            usage = "The base URL of the space we want to 'deconfluence'.",
+    @Option(name = "-b",
+            metaVar = "BASE URL",
+            usage = "The base URL of the URL space we want to deconfluence.",
             required = true)
     private String space;
 
