@@ -55,6 +55,7 @@ public class Deconfluencer {
 
     @Option(name = "-o",
             usage = "Parameters to be passed to the transformation",
+            metaVar = "NAME=VALUE",
             required = false)
     private Map<String, String> params;
 
@@ -82,6 +83,12 @@ public class Deconfluencer {
             required= true)
     private File filter;
 
+    @Option(name = "-s",
+            metaVar = "SPACE",
+            usage = "The base URL of the space we want to 'deconfluence'.",
+            required = true)
+    private String space;
+
     public static final void main(String... args) throws Exception {
         Deconfluencer proxy = new Deconfluencer();
         CmdLineParser parser = new CmdLineParser(proxy);
@@ -99,7 +106,7 @@ public class Deconfluencer {
         UriBuilder builder = new UriBuilder() {
             @Override
             public String buildFrom(String path) {
-                String result = "https://projects.xebia.com/confluence/display/CRAFT" + path;
+                String result = space + path;
                 logger.debug("Trying " + result);
                 return result;
             }
