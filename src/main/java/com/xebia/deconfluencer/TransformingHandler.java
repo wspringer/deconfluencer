@@ -51,7 +51,7 @@ public class TransformingHandler extends AbstractHandler {
     /**
      * Constructs a new instance.
      *
-     * @param loader The object loading the source from a path.
+     * @param loader   The object loading the source from a path.
      * @param template The object hiding some of the complexity for executing XSLT transformations.
      */
     public TransformingHandler(Loader<? extends Source> loader, Transformation template) {
@@ -64,8 +64,12 @@ public class TransformingHandler extends AbstractHandler {
             throws IOException, ServletException {
         String path = baseRequest.getPathInfo();
         Source source = loader.load(path);
-        response.setContentType("text/html");
-        template.transform(source, new StreamResult(response.getOutputStream()), Collections.singletonMap("path", path));
+        if (source != null) {
+            response.setContentType("text/html");
+            template.transform(source, new StreamResult(response.getOutputStream()), Collections.singletonMap("path", path));
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
 }

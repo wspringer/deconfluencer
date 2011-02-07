@@ -75,8 +75,12 @@ public class HttpLoader implements Loader<InputStream> {
         Future<Response> future = extender.extend(client.prepareGet(uri)).execute();
         try {
             Response response = future.get();
-            logger.debug("Got response with status code " + response.getStatusCode());
-            return response.getResponseBodyAsStream();
+            if (response.getStatusCode() != 200) {
+                logger.debug("Failed to retrieve " + path);
+                return null;
+            } else {
+                return response.getResponseBodyAsStream();
+            }
         } catch (InterruptedException e) {
             Thread.interrupted();
             return null;

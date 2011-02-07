@@ -28,9 +28,15 @@
       </head>
       <body>
         <div id="main">
-          <div id="masthead">xebia <span id="essentials">essentials</span></div>
+          <div id="top"></div>
+          <div id="masthead">
+            <xsl:attribute name="style">
+              <xsl:text>background-color: </xsl:text>
+              <xsl:apply-templates select="$card" mode="color"/>
+            </xsl:attribute>
+            <xsl:apply-templates select="$card/front" mode="card"/>
+          </div>
           <div id="body">
-            <h1><xsl:value-of select="$title"/></h1>
             <xsl:apply-templates select="//div[@class='wiki-content']"/>
           </div>
         </div>
@@ -58,5 +64,21 @@
   <xsl:template match="div[@id='card-images']"/>
 
   <xsl:template match="script"/>
+
+  <xsl:template match="front" mode="card">
+    <xsl:apply-templates/>
+  </xsl:template>
+
+  <xsl:template match="back" mode="card"/>
+
+  <xsl:template match="para" mode="card">
+    <xsl:apply-templates/>
+    <br/>
+  </xsl:template>
+
+  <xsl:template match="card" mode="color">
+    <xsl:variable name="category" select="./@category"/>
+    <xsl:value-of select="document('/Users/wilfred/workspace/craftmanship/src/cards/final.xml')//category[@id=$category]/@color"/>
+  </xsl:template>
 
 </xsl:stylesheet>
