@@ -31,8 +31,8 @@ The target directory will contain a tar.gz file containing everything
 required. Just unzip that file in a directory of your preference, and
 you're in business.
 
-How to user it
-==============
+How to use it
+=============
 
 That's simple. Simply type::
 
