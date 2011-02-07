@@ -14,10 +14,10 @@ rewrite links, you name it.
 Limitations
 ===========
 
-The current version is configured with a default stylesheet defining
-the page rewriting tools and a default location to forward too. That's
-something that will probably change at some point in time. Other than
-that, it's not tested too much, and logging sucks too. But it works.
+The current version is able to serve data from a local directory, or
+from Confluence. However, at this stage, it assumes all data to be
+HTML. That is, it doesn't have a way of proxying non-HTML based data
+yet.
 
 How to build
 ============
@@ -27,9 +27,9 @@ Maven project::
 
   mvn install
 
-Currently, it's not generating a tar.gz file or anything yet, so you
-will actually have to go into the target directoy, and the
-appassembler directory to start it.
+The target directory will contain a tar.gz file containing everything
+required. Just unzip that file in a directory of your preference, and
+you're in business.
 
 How to user it
 ==============
@@ -38,13 +38,22 @@ That's simple. Simply type::
 
   deconfluencer
 
-That will give you a list of options. There are two options required:
-the username, and a password. That's it. It will start the
-deconfluencer as a reverse proxy on a certain port and forward all
-incoming calls to confluence, hopefully translating the results into
-something that makes sense. (So you need to point your browser to a
-URL that includes the portnumber on which you have the deconfluencer
-running.)
+It has couple of required options. First of all, it wants you to
+explain how to map incoming URLs to Confluence URLs, by passing it the
+base URL of the Confluence site you are proxying. For every incoming
+request, the path will be stripped of and combined with this base URL.
 
+However, normally Confluence will not allow for anonymous access. That
+means you will have to pass a username and password as well.
 
+The 'rewriting' bit is actually done by an XSLT stylesheet. By
+default, it will pick filter.xsl from the conf directory. However, you
+can point the deconfluencer to any XSL you like. 
+
+In many cases, your new design will require some static resources. In
+order to make those available, you would normally have to put them on
+another web server. However, with the deconfluencer, that's not
+required. You can just pass in the directory containing your static
+resources. These resources can then be addressed by putting in
+'/resources' in front of their names.
 
