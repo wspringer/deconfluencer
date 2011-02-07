@@ -6,7 +6,6 @@
                 version="1.0">
 
   <xsl:output method="html"/>
-  <xsl:param name="stylesheet"/>
   <xsl:param name="path"/>
   
   <xsl:template match="/">
@@ -20,11 +19,8 @@
     <html>
       <head>
         <link rel="stylesheet"
-              type="text/css">
-          <xsl:attribute name="href">
-            <xsl:value-of select="$stylesheet"/>
-          </xsl:attribute>
-        </link>
+              type="text/css"
+              href="resources/style.css"/>
       </head>
       <body>
         <div id="main">

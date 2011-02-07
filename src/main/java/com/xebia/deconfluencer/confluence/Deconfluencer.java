@@ -31,10 +31,16 @@ package com.xebia.deconfluencer.confluence;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Map;
 import javax.xml.transform.Templates;
 import org.apache.xalan.xsltc.trax.TransformerFactoryImpl;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.util.resource.FileResource;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -52,6 +58,8 @@ public class Deconfluencer {
 
     private final static int DEFAULT_PORTNUMBER = 8082;
     private final static Logger logger = new Logger();
+    private final static File DEFAULT_FILTER = new File(System.getProperty("basedir"), "conf/filter.xsl");
+    private final static File DEFAULT_RESOURCES = new File(System.getProperty("basedir"), "resources");
 
     @Option(name = "-o",
             usage = "Parameters to be passed to the transformation",
@@ -78,16 +86,22 @@ public class Deconfluencer {
     private int portNumber = DEFAULT_PORTNUMBER;
 
     @Option(name = "-f",
-            metaVar= "FILTER",
-            usage= "The location of the XSLT filter to be applied",
-            required= true)
-    private File filter;
+            metaVar = "FILTER",
+            usage = "The location of the XSLT filter to be applied. (Defaults to conf/filter.xsl.)",
+            required = false)
+    private File filter = DEFAULT_FILTER;
 
     @Option(name = "-b",
             metaVar = "BASE URL",
             usage = "The base URL of the URL space we want to deconfluence.",
             required = true)
     private String space;
+
+    @Option(name = "-s",
+            metaVar = "PATH",
+            usage = "Location to be used for serving static resources. (Defaults to resources/.)",
+            required = false)
+    private File directory = DEFAULT_RESOURCES;
 
     public static final void main(String... args) throws Exception {
         Deconfluencer proxy = new Deconfluencer();
@@ -102,7 +116,7 @@ public class Deconfluencer {
         }
     }
 
-    private void start() throws Exception {
+    private Handler createTransformingHandler() {
         UriBuilder builder = new UriBuilder() {
             @Override
             public String buildFrom(String path) {
@@ -111,16 +125,33 @@ public class Deconfluencer {
                 return result;
             }
         };
-//        TransformerFactory factory = TransformerFactory.newInstance();
-//        Templates templates = factory.newTemplates(new StreamSource(Resources.getResource("filter.xsl").openStream()));
         Templates templates = new ReloadingTemplates(filter, new TransformerFactoryImpl());
-        Server server = new Server(portNumber);
         Loader<InputStream> dataLoader = new HttpLoader(builder,
                 new BasicAuthenticationRequestExtender(username, password));
         NekoSourceLoader nekoSourceLoader = new NekoSourceLoader(dataLoader);
-        TransformingHandler handler = new TransformingHandler(nekoSourceLoader, new Transformation(templates, params));
+        return new TransformingHandler(nekoSourceLoader, new Transformation(templates, params));
+    }
+
+    private void start() throws Exception {
+        Handler handler = createTransformingHandler();
+        if (directory != null && directory.exists() && directory.isDirectory() && directory.canRead()) {
+            logger.debug("Serving resources from " + directory);
+            handler = addResourceHandler(handler, directory);
+        }
+        Server server = new Server(portNumber);
         server.setHandler(handler);
         server.start();
+    }
+
+    private Handler addResourceHandler(Handler handler, File directory) throws Exception, URISyntaxException {
+        HandlerList list = new HandlerList();
+        ResourceHandler resourceHandler = new ResourceHandler();
+        resourceHandler.setBaseResource(new FileResource(directory.toURL()));
+        ContextHandler contextHandler = new ContextHandler("/resources");
+        contextHandler.setHandler(resourceHandler);
+        list.addHandler(contextHandler);
+        list.addHandler(handler);
+        return list;
     }
 
     private static void printUsage(CmdLineParser parser) {

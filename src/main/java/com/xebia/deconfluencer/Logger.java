@@ -42,4 +42,8 @@ public class Logger {
         System.err.println(msg);
         cause.printStackTrace(System.err);
     }
+
+    public void warn(String msg) {
+        System.err.println(msg);
+    }
 }

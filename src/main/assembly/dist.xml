@@ -27,5 +27,9 @@
             <directory>src/main/resources</directory>
             <outputDirectory>/conf</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>src/main/static</directory>
+            <outputDirectory>/resources</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>
