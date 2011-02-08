@@ -65,7 +65,7 @@ public class ReloadingTemplates implements Templates, JNotifyListener {
 
     private Templates templates;
 
-    private final int watchId;
+    private int watchId;
 
     public ReloadingTemplates(File file, TransformerFactory factory) {
         this.file = file;
@@ -74,7 +74,7 @@ public class ReloadingTemplates implements Templates, JNotifyListener {
             watchId = JNotify.addWatch(file.getParentFile().getAbsolutePath(), MASK, false, this);
             templates = load(file);
         } catch (JNotifyException e) {
-            throw new IllegalStateException("Failed to monitor " + file);
+            logger.error("Failed to monitor " + file, e);
         }
     }
 
@@ -94,7 +94,8 @@ public class ReloadingTemplates implements Templates, JNotifyListener {
             Source source = new StreamSource(file);
             return factory.newTemplates(source);
         } catch (TransformerConfigurationException e) {
-            return templates = new NullTemplates();
+            logger.error("Failed to load XSLT file: ", e);
+            return new NullTemplates();
         }
     }
 

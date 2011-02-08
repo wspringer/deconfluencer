@@ -20,7 +20,7 @@
       <head>
         <link rel="stylesheet"
               type="text/css"
-              href="resources/style.css"/>
+              href="/resources/style.css"/>
       </head>
       <body>
         <div id="main">

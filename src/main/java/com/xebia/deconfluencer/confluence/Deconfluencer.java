@@ -32,6 +32,7 @@ package com.xebia.deconfluencer.confluence;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 import javax.xml.transform.Templates;
 import org.apache.xalan.xsltc.trax.TransformerFactoryImpl;
@@ -65,7 +66,7 @@ public class Deconfluencer {
             usage = "Parameters to be passed to the transformation",
             metaVar = "NAME=VALUE",
             required = false)
-    private Map<String, String> params;
+    private Map<String, String> params = new HashMap<String, String>();
 
     @Option(name = "-u",
             metaVar = "USERNAME",

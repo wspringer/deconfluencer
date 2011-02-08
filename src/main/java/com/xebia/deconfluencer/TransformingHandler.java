@@ -47,6 +47,7 @@ public class TransformingHandler extends AbstractHandler {
 
     private final Loader<? extends Source> loader;
     private Transformation template;
+    private Logger logger = new Logger();
 
     /**
      * Constructs a new instance.
@@ -68,6 +69,7 @@ public class TransformingHandler extends AbstractHandler {
             response.setContentType("text/html");
             template.transform(source, new StreamResult(response.getOutputStream()), Collections.singletonMap("path", path));
         } else {
+            logger.error("Got no data for " + path);
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
     }

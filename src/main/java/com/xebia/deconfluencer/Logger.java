@@ -46,4 +46,8 @@ public class Logger {
     public void warn(String msg) {
         System.err.println(msg);
     }
+
+    public void error(String msg) {
+        System.err.println(msg);
+    }
 }
