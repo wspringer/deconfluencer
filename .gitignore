@@ -2,3 +2,6 @@
 /exposure.ipr
 /exposure.iws
 /target
+.project
+.classpath
+.settings/
