@@ -37,7 +37,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
-import com.xebia.deconfluencer.Logger;
+import com.xebia.deconfluencer.log.Logger;
 
 import net.contentobjects.jnotify.JNotify;
 import net.contentobjects.jnotify.JNotifyException;
@@ -49,7 +49,7 @@ import net.contentobjects.jnotify.JNotifyListener;
  */
 public class ReloadingTemplates implements Templates, JNotifyListener {
 
-    private final Logger logger = new Logger();
+    private final Logger logger = Logger.forClass(ReloadingTemplates.class);
 
     private static final int MASK = JNotify.FILE_MODIFIED;
 
@@ -74,7 +74,7 @@ public class ReloadingTemplates implements Templates, JNotifyListener {
             watchId = JNotify.addWatch(file.getParentFile().getAbsolutePath(), MASK, false, this);
             templates = load(file);
         } catch (JNotifyException e) {
-            logger.error("Failed to monitor " + file, e);
+            logger.error("Failed to monitor " + file + " for updates.", e);
         }
     }
 
@@ -94,7 +94,7 @@ public class ReloadingTemplates implements Templates, JNotifyListener {
             Source source = new StreamSource(file);
             return factory.newTemplates(source);
         } catch (TransformerConfigurationException e) {
-            logger.error("Failed to load XSLT file: ", e);
+            logger.error("Failed to load XSLT file.", e);
             return new NullTemplates();
         }
     }

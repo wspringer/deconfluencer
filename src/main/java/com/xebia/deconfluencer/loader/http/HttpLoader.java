@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
-import com.xebia.deconfluencer.Logger;
+import com.xebia.deconfluencer.log.Logger;
 import com.xebia.deconfluencer.Loader;
 
 /**
@@ -45,7 +45,7 @@ public class HttpLoader implements Loader<InputStream> {
 
     private final UriBuilder builder;
     private final RequestExtender extender;
-    private final static Logger logger = new Logger();
+    private final static Logger logger = Logger.forClass(HttpLoader.class);
 
     /**
      * Constructs a new instance, accepting an object that turns incoming path into URIs locating web resources.
@@ -71,12 +71,13 @@ public class HttpLoader implements Loader<InputStream> {
     @Override
     public InputStream load(String path) throws IOException {
         String uri = builder.buildFrom(path);
+        logger.info("Downloading " + uri);
         AsyncHttpClient client = new AsyncHttpClient();
         Future<Response> future = extender.extend(client.prepareGet(uri)).execute();
         try {
             Response response = future.get();
             if (response.getStatusCode() != 200) {
-                logger.debug("Failed to retrieve " + path);
+                logger.warn("Failed to download " + path);
                 return null;
             } else {
                 return response.getResponseBodyAsStream();

@@ -38,6 +38,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamResult;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import com.xebia.deconfluencer.log.Logger;
 import com.xebia.deconfluencer.xslt.Transformation;
 
 /**
@@ -47,7 +48,7 @@ public class TransformingHandler extends AbstractHandler {
 
     private final Loader<? extends Source> loader;
     private Transformation template;
-    private Logger logger = new Logger();
+    private Logger logger = Logger.forClass(TransformingHandler.class);
 
     /**
      * Constructs a new instance.

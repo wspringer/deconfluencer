@@ -38,7 +38,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import com.google.common.io.Closeables;
 import com.xebia.deconfluencer.Loader;
-import com.xebia.deconfluencer.Logger;
+import com.xebia.deconfluencer.log.Logger;
 
 /**
  * A {@link Loader} that wraps around a Loader of InputStream, taking the bytes provided by the InputStream and turning
@@ -47,7 +47,7 @@ import com.xebia.deconfluencer.Logger;
 public class NekoSourceLoader implements Loader<DOMSource> {
 
     private final Loader<InputStream> source;
-    private final static Logger logger = new Logger();
+    private final static Logger logger = Logger.forClass(NekoSourceLoader.class);
 
     /**
      * Constructs a new Loader, accepting the Loader that will provide the raw bytes.

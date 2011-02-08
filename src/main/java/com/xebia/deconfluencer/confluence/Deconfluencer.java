@@ -35,7 +35,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.transform.Templates;
-import org.apache.xalan.xsltc.trax.TransformerFactoryImpl;
+import org.apache.xalan.processor.TransformerFactoryImpl;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -46,19 +46,21 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import com.xebia.deconfluencer.Loader;
-import com.xebia.deconfluencer.Logger;
 import com.xebia.deconfluencer.TransformingHandler;
 import com.xebia.deconfluencer.loader.http.BasicAuthenticationRequestExtender;
 import com.xebia.deconfluencer.loader.http.HttpLoader;
 import com.xebia.deconfluencer.loader.http.UriBuilder;
 import com.xebia.deconfluencer.loader.neko.NekoSourceLoader;
+import com.xebia.deconfluencer.log.DefaultLoggerAdapter;
+import com.xebia.deconfluencer.log.Level;
+import com.xebia.deconfluencer.log.Logger;
 import com.xebia.deconfluencer.xslt.ReloadingTemplates;
 import com.xebia.deconfluencer.xslt.Transformation;
 
 public class Deconfluencer {
 
     private final static int DEFAULT_PORTNUMBER = 8082;
-    private final static Logger logger = new Logger();
+    private final static Logger logger = Logger.forClass(Deconfluencer.class);
     private final static File DEFAULT_FILTER = new File(System.getProperty("basedir"), "conf/filter.xsl");
     private final static File DEFAULT_RESOURCES = new File(System.getProperty("basedir"), "resources");
 
@@ -98,6 +100,12 @@ public class Deconfluencer {
             required = true)
     private String space;
 
+    @Option(name= "-v",
+            usage = "Verbose mode. Logging data to std err.",
+            required = false)
+    private boolean verbose;
+
+
     @Option(name = "-s",
             metaVar = "PATH",
             usage = "Location to be used for serving static resources. (Defaults to resources/.)",
@@ -122,7 +130,6 @@ public class Deconfluencer {
             @Override
             public String buildFrom(String path) {
                 String result = space + path;
-                logger.debug("Trying " + result);
                 return result;
             }
         };
@@ -134,9 +141,14 @@ public class Deconfluencer {
     }
 
     private void start() throws Exception {
+        if (verbose) {
+            DefaultLoggerAdapter.enable(Level.INFO, Level.WARN, Level.INFO);
+        } else {
+            DefaultLoggerAdapter.disableAll();
+        }
         Handler handler = createTransformingHandler();
         if (directory != null && directory.exists() && directory.isDirectory() && directory.canRead()) {
-            logger.debug("Serving resources from " + directory);
+            logger.info("Serving resources from " + directory);
             handler = addResourceHandler(handler, directory);
         }
         Server server = new Server(portNumber);

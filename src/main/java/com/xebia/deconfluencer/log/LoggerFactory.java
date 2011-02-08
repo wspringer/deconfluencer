@@ -27,27 +27,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.xebia.deconfluencer;
+package com.xebia.deconfluencer.log;
 
-/**
- * An oversimplified Logger, since I'm just to darn lazy to configure SL4J.
- */
-public class Logger {
+public interface LoggerFactory {
 
-    public void debug(String msg) {
-        System.err.println(msg);
-    }
+    Logger create(Class<?> cl);
 
-    public void error(String msg, Throwable cause) {
-        System.err.println(msg);
-        cause.printStackTrace(System.err);
-    }
-
-    public void warn(String msg) {
-        System.err.println(msg);
-    }
-
-    public void error(String msg) {
-        System.err.println(msg);
-    }
 }
