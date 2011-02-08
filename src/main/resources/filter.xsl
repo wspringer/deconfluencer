@@ -11,7 +11,7 @@
   <xsl:template match="/">
     <xsl:variable name="id" select="substring($path, 2)"/>
     <xsl:variable name="card" 
-                  select="document('/Users/wilfred/workspace/craftmanship/src/cards/final.xml')/deck/card[@id=$id]"/>
+                  select="document('/Users/wilfred/workspace/craftmanship/src/cards/final.xml')/deck/card[@id=$id or @altid=$id]"/>
     <xsl:variable name="title">
       <xsl:apply-templates 
           select="$card/front/para/text()"/>
