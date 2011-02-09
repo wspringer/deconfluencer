@@ -39,18 +39,16 @@ blockquote {
 }
 
 #masthead {
-   height: 200px;
-   overflow: hidden;
-   color: white;
-   margin-left: 15px;
-   margin-right: 15px;
    padding-top: 20px;
-   padding-bottom: 50px;
+   padding-bottom: 10px;
    padding-left: 40px;
    padding-right: 40px;
-   font-family: Garamond;
+   font-family: Calibri;
    font-weight: normal;
-   font-size: 34pt;
+}
+
+h1 {
+   font-size: 30pt;
 }
 
 #essentials {
