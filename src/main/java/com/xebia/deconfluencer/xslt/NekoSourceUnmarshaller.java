@@ -52,6 +52,7 @@ public class NekoSourceUnmarshaller implements Unmarshaller<DOMSource> {
             DOMParser parser = new DOMParser(new HTMLConfiguration());
             parser.setProperty("http://cyberneko.org/html/properties/names/elems", "lower");
             parser.setProperty("http://cyberneko.org/html/properties/names/attrs", "lower");
+            parser.setProperty("http://cyberneko.org/html/properties/default-encoding", "UTF-8");
             parser.parse(new InputSource(in));
             logger.debug("Returning DOM Document based on HTML.");
             return new DOMSource(parser.getDocument());
