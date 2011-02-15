@@ -30,7 +30,6 @@
 package com.xebia.deconfluencer.confluence;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,16 +45,20 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import com.xebia.deconfluencer.Loader;
-import com.xebia.deconfluencer.TransformingHandler;
+import com.xebia.deconfluencer.Processor;
+import com.xebia.deconfluencer.ProcessorSelector;
+import com.xebia.deconfluencer.ProxyingHandler;
+import com.xebia.deconfluencer.Response;
 import com.xebia.deconfluencer.loader.http.BasicAuthenticationRequestExtender;
 import com.xebia.deconfluencer.loader.http.HttpLoader;
 import com.xebia.deconfluencer.loader.http.UriBuilder;
-import com.xebia.deconfluencer.loader.neko.NekoSourceLoader;
+import com.xebia.deconfluencer.xslt.NekoSourceUnmarshaller;
 import com.xebia.deconfluencer.log.DefaultLoggerAdapter;
 import com.xebia.deconfluencer.log.Level;
 import com.xebia.deconfluencer.log.Logger;
 import com.xebia.deconfluencer.xslt.ReloadingTemplates;
 import com.xebia.deconfluencer.xslt.Transformation;
+import com.xebia.deconfluencer.xslt.TransformingProcessor;
 
 public class Deconfluencer {
 
@@ -133,11 +136,16 @@ public class Deconfluencer {
                 return result;
             }
         };
-        Templates templates = new ReloadingTemplates(filter, new TransformerFactoryImpl());
-        Loader<InputStream> dataLoader = new HttpLoader(builder,
+        final Templates templates = new ReloadingTemplates(filter, new TransformerFactoryImpl());
+        Loader<Response> dataLoader = new HttpLoader(builder,
                 new BasicAuthenticationRequestExtender(username, password));
-        NekoSourceLoader nekoSourceLoader = new NekoSourceLoader(dataLoader);
-        return new TransformingHandler(nekoSourceLoader, new Transformation(templates, params));
+        ProcessorSelector selector = new ProcessorSelector() {
+            @Override
+            public Processor select(Response response) {
+                return new TransformingProcessor(new Transformation(templates, params), new NekoSourceUnmarshaller());
+            }
+        };
+        return new ProxyingHandler(dataLoader, selector);
     }
 
     private void start() throws Exception {

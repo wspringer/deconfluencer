@@ -29,10 +29,13 @@
  */
 package com.xebia.deconfluencer.loader.http;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import com.xebia.deconfluencer.log.Logger;
@@ -41,11 +44,13 @@ import com.xebia.deconfluencer.Loader;
 /**
  * A {@link Loader} that offers the data from a web resource located by the path passed in.
  */
-public class HttpLoader implements Loader<InputStream> {
+public class HttpLoader implements Loader<com.xebia.deconfluencer.Response> {
 
     private final UriBuilder builder;
     private final RequestExtender extender;
     private final static Logger logger = Logger.forClass(HttpLoader.class);
+    private static final long DEFAULT_TIMEOUT = 5;
+    private static final TimeUnit DEFAULT_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
     /**
      * Constructs a new instance, accepting an object that turns incoming path into URIs locating web resources.
@@ -69,24 +74,126 @@ public class HttpLoader implements Loader<InputStream> {
     }
 
     @Override
-    public InputStream load(String path) throws IOException {
+    public com.xebia.deconfluencer.Response load(String path) throws IOException {
         String uri = builder.buildFrom(path);
         logger.info("Downloading " + uri);
         AsyncHttpClient client = new AsyncHttpClient();
-        Future<Response> future = extender.extend(client.prepareGet(uri)).execute();
-        try {
-            Response response = future.get();
-            if (response.getStatusCode() != 200) {
-                logger.warn("Failed to download " + path);
-                return null;
-            } else {
-                return response.getResponseBodyAsStream();
+        final Future<Response> future = extender.extend(client.prepareGet(uri)).execute();
+        return new FutureResponse(future, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNIT);
+    }
+
+    private static class FutureResponse implements com.xebia.deconfluencer.Response {
+
+        private final Future<Response> future;
+        private final long timeout;
+        private final TimeUnit unit;
+
+        public FutureResponse(Future<Response> future, long timeout, TimeUnit unit) {
+            this.future = future;
+            this.timeout = timeout;
+            this.unit = unit;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return execute(new ResponseHandler<InputStream>() {
+                @Override
+                public InputStream handle(com.xebia.deconfluencer.Response response) throws IOException {
+                    return response.getInputStream();
+                }
+            });
+        }
+
+        @Override
+        public String getContentType() {
+            return execute(new ResponseHandler<String>() {
+                @Override
+                public String handle(com.xebia.deconfluencer.Response response) throws IOException {
+                    return response.getContentType();
+                }
+            });
+        }
+
+        @Override
+        public int getStatusCode() {
+            return execute(new ResponseHandler<Integer>() {
+                @Override
+                public Integer handle(com.xebia.deconfluencer.Response response) throws IOException {
+                    return response.getStatusCode();
+                }
+            });
+        }
+
+        private interface ResponseHandler<T> {
+
+            T handle(com.xebia.deconfluencer.Response response) throws Throwable;
+
+        }
+
+        private <T> T execute(ResponseHandler<T> handler) {
+            try {
+                return handler.handle(getResponse());
+            } catch(Throwable t) {
+                throw new IllegalStateException("Failed to get data from response.");
             }
-        } catch (InterruptedException e) {
-            Thread.interrupted();
-            return null;
-        } catch (ExecutionException e) {
-            return null;
+        }
+
+        private com.xebia.deconfluencer.Response getResponse() {
+            try {
+                return new ResponseWrapper(future.get(timeout, unit));
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+                return new FailedResponse();
+            } catch (ExecutionException e) {
+                logger.error("Failed to retrieve content.", e);
+                return new FailedResponse();
+            } catch (TimeoutException e) {
+                logger.error("Failed to retrieve content in a timely way.", e);
+                return new FailedResponse();
+            }
+        }
+
+    }
+
+    private static class ResponseWrapper implements com.xebia.deconfluencer.Response {
+
+        private final Response response;
+
+        public ResponseWrapper(Response response) {
+            this.response = response;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return response.getResponseBodyAsStream();
+        }
+
+        @Override
+        public String getContentType() {
+            return response.getContentType();
+        }
+
+        @Override
+        public int getStatusCode() {
+            return response.getStatusCode();
+        }
+    }
+
+    private static class FailedResponse implements com.xebia.deconfluencer.Response {
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(new byte[0]);
+        }
+
+        @Override
+        public String getContentType() {
+            return "text/plain";
+        }
+
+        @Override
+        public int getStatusCode() {
+            return 404;
         }
     }
 
