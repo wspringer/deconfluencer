@@ -112,12 +112,44 @@
                             <name>deconfluencer</name>
                         </program>
                     </programs>
+                    <daemons>
+                        <daemon>
+                            <id>deconfluencerd</id>
+                            <commandLineArguments>
+                                <commandLineArgument>-c ~/.deconfluencer/config.xml</commandLineArgument>
+                            </commandLineArguments>
+                            <mainClass>com.xebia.deconfluencer.confluence.Deconfluencer</mainClass>
+                            <platforms>
+                                <platform>jsw</platform>
+                            </platforms>
+                            <generatorConfigurations>
+                                <generatorConfiguration>
+                                    <generator>jsw</generator>
+                                    <configuration>
+                                        <property>
+                                            <name>configuration.directory.in.classpath.first</name>
+                                            <value>etc</value>
+                                        </property>
+                                        <property>
+                                            <name>set.default.REPO_DIR</name>
+                                            <value>lib</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.logfile</name>
+                                            <value>logs/wrapper.log</value>
+                                        </property>
+                                    </configuration>
+                                </generatorConfiguration>
+                            </generatorConfigurations>
+                        </daemon>
+                    </daemons>
                 </configuration>
                 <executions>
                     <execution>
                         <phase>install</phase>
                         <goals>
                             <goal>assemble</goal>
+                            <goal>generate-daemons</goal>
                         </goals>
                     </execution>
                 </executions>

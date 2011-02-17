@@ -20,6 +20,10 @@
             <outputDirectory>/lib</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>src/main/logs</directory>
+            <outputDirectory>/logs</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>share</directory>
             <outputDirectory>/lib</outputDirectory>
         </fileSet>
@@ -30,6 +34,18 @@
         <fileSet>
             <directory>src/main/static</directory>
             <outputDirectory>/resources</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>target/generated-resources/appassembler/jsw/deconfluencerd/bin</directory>
+            <outputDirectory>/bin</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>target/generated-resources/appassembler/jsw/deconfluencerd/conf</directory>
+            <outputDirectory>/conf</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>target/generated-resources/appassembler/jsw/deconfluencerd/lib</directory>
+            <outputDirectory>/lib</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
