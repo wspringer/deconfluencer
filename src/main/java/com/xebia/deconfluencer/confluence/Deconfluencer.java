@@ -30,11 +30,13 @@
 package com.xebia.deconfluencer.confluence;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.transform.Templates;
 import org.apache.xalan.processor.TransformerFactoryImpl;
+import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -52,10 +54,10 @@ import com.xebia.deconfluencer.Response;
 import com.xebia.deconfluencer.loader.http.BasicAuthenticationRequestExtender;
 import com.xebia.deconfluencer.loader.http.HttpLoader;
 import com.xebia.deconfluencer.loader.http.UriBuilder;
-import com.xebia.deconfluencer.xslt.NekoSourceUnmarshaller;
 import com.xebia.deconfluencer.log.DefaultLoggerAdapter;
 import com.xebia.deconfluencer.log.Level;
 import com.xebia.deconfluencer.log.Logger;
+import com.xebia.deconfluencer.xslt.NekoSourceUnmarshaller;
 import com.xebia.deconfluencer.xslt.ReloadingTemplates;
 import com.xebia.deconfluencer.xslt.Transformation;
 import com.xebia.deconfluencer.xslt.TransformingProcessor;
@@ -166,13 +168,21 @@ public class Deconfluencer {
 
     private Handler addResourceHandler(Handler handler, File directory) throws Exception, URISyntaxException {
         HandlerList list = new HandlerList();
-        ResourceHandler resourceHandler = new ResourceHandler();
-        resourceHandler.setBaseResource(new FileResource(directory.toURL()));
         ContextHandler contextHandler = new ContextHandler("/resources");
-        contextHandler.setHandler(resourceHandler);
+        contextHandler.setHandler(createResourceHandler(directory));
         list.addHandler(contextHandler);
         list.addHandler(handler);
         return list;
+    }
+
+    private ResourceHandler createResourceHandler(File directory) throws IOException, URISyntaxException {
+        ResourceHandler resourceHandler = new ResourceHandler();
+        resourceHandler.setBaseResource(new FileResource(directory.toURL()));
+        MimeTypes mimeTypes = resourceHandler.getMimeTypes();
+        mimeTypes.addMimeMapping("eot", "application/vnd.ms-fontobject");
+        mimeTypes.addMimeMapping("otf", "application/octet-stream");
+        mimeTypes.addMimeMapping("ttf", "application/octet-stream");
+        return resourceHandler;
     }
 
     private static void printUsage(CmdLineParser parser) {
