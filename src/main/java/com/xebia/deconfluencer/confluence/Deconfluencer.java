@@ -77,6 +77,7 @@ public class Deconfluencer {
     private final static Logger logger = Logger.forClass(Deconfluencer.class);
     private final static File DEFAULT_FILTER = new File(System.getProperty("basedir"), "conf/filter.xsl");
     private final static File DEFAULT_RESOURCES = new File(System.getProperty("basedir"), "resources");
+    private final static File DEFAULT_CONFIG = new File(System.getProperty("user.home"), ".deconfluencer/config.xml");
 
     @Option(name = "-o",
             usage = "Parameters to be passed to the transformation.",
@@ -131,16 +132,17 @@ public class Deconfluencer {
 
     @Option(name = "-c",
             metaVar = "FILE",
-            usage = "Location of a configuration file.",
+            usage = "Location of a configuration file. (Defaults to ~/.deconfluencer/config.xml.)",
             required = false)
-    private File configFile;
+    private File configFile = DEFAULT_CONFIG;
 
     public static final void main(String... args) throws Exception {
         Deconfluencer proxy = new Deconfluencer();
         CmdLineParser parser = new CmdLineParser(proxy);
         try {
             parser.parseArgument(args);
-            if (proxy.configFile != null) {
+            logger.info("Loading default configuration from " + proxy.configFile);
+            if (proxy.configFile != null && proxy.configFile.exists()) {
                 configureFromXml(proxy, proxy.configFile);
                 parser.parseArgument(args); // Override configuration with cmdline options
             }

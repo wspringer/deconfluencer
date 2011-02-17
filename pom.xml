@@ -115,9 +115,6 @@
                     <daemons>
                         <daemon>
                             <id>deconfluencerd</id>
-                            <commandLineArguments>
-                                <commandLineArgument>-c ~/.deconfluencer/config.xml</commandLineArgument>
-                            </commandLineArguments>
                             <mainClass>com.xebia.deconfluencer.confluence.Deconfluencer</mainClass>
                             <platforms>
                                 <platform>jsw</platform>
