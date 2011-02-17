@@ -30,9 +30,13 @@
 package com.xebia.deconfluencer.confluence;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.xml.transform.Templates;
 import org.apache.xalan.processor.TransformerFactoryImpl;
@@ -46,6 +50,10 @@ import org.eclipse.jetty.util.resource.FileResource;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import com.google.common.base.Joiner;
+import com.google.common.io.Closeables;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.xebia.deconfluencer.Loader;
 import com.xebia.deconfluencer.Processor;
 import com.xebia.deconfluencer.ProcessorSelector;
@@ -62,6 +70,7 @@ import com.xebia.deconfluencer.xslt.ReloadingTemplates;
 import com.xebia.deconfluencer.xslt.Transformation;
 import com.xebia.deconfluencer.xslt.TransformingProcessor;
 
+@XStreamAlias("deconfluencer")
 public class Deconfluencer {
 
     private final static int DEFAULT_PORTNUMBER = 8082;
@@ -70,63 +79,109 @@ public class Deconfluencer {
     private final static File DEFAULT_RESOURCES = new File(System.getProperty("basedir"), "resources");
 
     @Option(name = "-o",
-            usage = "Parameters to be passed to the transformation",
-            metaVar = "NAME=VALUE",
-            required = false)
+            usage = "Parameters to be passed to the transformation.",
+            metaVar = "NAME=VALUE")
+    @XStreamAlias("params")
     private Map<String, String> params = new HashMap<String, String>();
 
     @Option(name = "-u",
             metaVar = "USERNAME",
-            usage = "The username used to authenticate to Confluence.",
-            required = true)
+            usage = "The username used to authenticate to Confluence.")
+    @XStreamAlias("username")
     private String username;
 
     @Option(name = "-p",
             metaVar = "PASSWORD",
-            usage = "The password used to authenticate to Confluence.",
-            required = true)
+            usage = "The password used to authenticate to Confluence.")
+    @XStreamAlias("password")
     private String password;
 
     @Option(name = "-n",
             metaVar = "PORTNUMBER",
             usage = "The portnumber on which the reverse proxy will run (" + DEFAULT_PORTNUMBER + ")",
             required = false)
+    @XStreamAlias("port")
     private int portNumber = DEFAULT_PORTNUMBER;
 
     @Option(name = "-f",
             metaVar = "FILTER",
             usage = "The location of the XSLT filter to be applied. (Defaults to conf/filter.xsl.)",
             required = false)
+    @XStreamAlias("filter")
     private File filter = DEFAULT_FILTER;
 
     @Option(name = "-b",
             metaVar = "BASE URL",
-            usage = "The base URL of the URL space we want to deconfluence.",
-            required = true)
+            usage = "The base URL of the URL space we want to deconfluence.")
+    @XStreamAlias("base")
     private String space;
 
-    @Option(name= "-v",
+    @Option(name = "-v",
             usage = "Verbose mode. Logging data to std err.",
             required = false)
+    @XStreamAlias("logging")
     private boolean verbose;
-
 
     @Option(name = "-s",
             metaVar = "PATH",
             usage = "Location to be used for serving static resources. (Defaults to resources/.)",
             required = false)
+    @XStreamAlias("resources")
     private File directory = DEFAULT_RESOURCES;
+
+    @Option(name = "-c",
+            metaVar = "FILE",
+            usage = "Location of a configuration file.",
+            required = false)
+    private File configFile;
 
     public static final void main(String... args) throws Exception {
         Deconfluencer proxy = new Deconfluencer();
         CmdLineParser parser = new CmdLineParser(proxy);
         try {
             parser.parseArgument(args);
-            proxy.start();
+            if (proxy.configFile != null) {
+                configureFromXml(proxy, proxy.configFile);
+                parser.parseArgument(args); // Override configuration with cmdline options
+            }
+            List<String> missingParameters = getMissingParameters(proxy);
+            if (missingParameters.isEmpty()) {
+                proxy.start();
+            } else {
+                printMissingParameters(missingParameters);
+                System.err.println();
+                printUsage(parser);
+            }
         } catch (CmdLineException cle) {
             System.err.println(cle.getMessage());
             System.err.println();
             printUsage(parser);
+        }
+    }
+
+    private static void printMissingParameters(List<String> missingParameters) {
+        System.err.println("Missing configuration for " + Joiner.on(", ").join(missingParameters) + ".");
+    }
+
+    private static List<String> getMissingParameters(Deconfluencer proxy) {
+        List<String> result = new ArrayList<String>();
+        if (proxy.username == null) result.add("username");
+        if (proxy.password == null) result.add("password");
+        if (proxy.space == null) result.add("base");
+        return result;
+    }
+
+    private static void configureFromXml(Deconfluencer proxy, File configFile) {
+        XStream xstream = new XStream();
+        xstream.processAnnotations(Deconfluencer.class);
+        InputStream in = null;
+        try {
+            in = new FileInputStream(configFile);
+            xstream.fromXML(in, proxy);
+        } catch (IOException ioe) {
+            logger.error("Failed to load configuration from " + configFile, ioe);
+        } finally {
+            Closeables.closeQuietly(in);
         }
     }
 
