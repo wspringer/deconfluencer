@@ -38,11 +38,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.Templates;
 import org.apache.xalan.processor.TransformerFactoryImpl;
 import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -78,6 +83,12 @@ public class Deconfluencer {
     private final static File DEFAULT_FILTER = new File(System.getProperty("basedir"), "conf/filter.xsl");
     private final static File DEFAULT_RESOURCES = new File(System.getProperty("basedir"), "resources");
     private final static File DEFAULT_CONFIG = new File(System.getProperty("user.home"), ".deconfluencer/config.xml");
+
+    @Option(name = "-i",
+            usage = "Resource to be served in absence of a path",
+            metaVar = "FILE")
+    @XStreamAlias("index")
+    private String index;
 
     @Option(name = "-o",
             usage = "Parameters to be passed to the transformation.",
@@ -216,17 +227,27 @@ public class Deconfluencer {
         Handler handler = createTransformingHandler();
         if (directory != null && directory.exists() && directory.isDirectory() && directory.canRead()) {
             logger.info("Serving resources from " + directory);
-            handler = addResourceHandler(handler, directory);
+            handler = addResourceHandler(handler, directory, index);
         }
         Server server = new Server(portNumber);
         server.setHandler(handler);
         server.start();
     }
 
-    private Handler addResourceHandler(Handler handler, File directory) throws Exception, URISyntaxException {
-        HandlerList list = new HandlerList();
+    private Handler addResourceHandler(Handler handler, File directory, final String index) throws Exception {
+        final HandlerList list = new HandlerList();
         ContextHandler contextHandler = new ContextHandler("/resources");
         contextHandler.setHandler(createResourceHandler(directory));
+        if (index != null) {
+            list.addHandler(new AbstractHandler() {
+                @Override
+                public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+                    if ("/".equals(target)) {
+                        response.sendRedirect(index);
+                    }
+                }
+            });
+        }
         list.addHandler(contextHandler);
         list.addHandler(handler);
         return list;
